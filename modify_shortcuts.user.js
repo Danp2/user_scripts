@@ -1,11 +1,14 @@
 // ==UserScript==
-// @name     Modify Zammad shortcuts
-// @match    https://help.vates.tech/*
-// @version  1.2
-// @grant    none
-// @require       https://cdn.jsdelivr.net/npm/hotkeys-js@3.13.7/dist/hotkeys.min.js
-// @run-at   document-idle
-// @description Modify Zammad shortcuts
+// @name         Modify Zammad shortcuts
+// @version      2024-06-01
+// @license      GPL-v3
+// @description  Add and remove shortcuts to Zammad helpdesk
+// @author       DanP2
+// @match        https://help.vates.tech/*
+// @icon         hhttps://avatars.githubusercontent.com/u/1380327?s=200&v=4
+// @require      https://cdn.jsdelivr.net/npm/hotkeys-js@3.13.7/dist/hotkeys.min.js
+// @grant        none
+// @run-at       document-idle
 // ==/UserScript==
 
 // Based on code found at these links:
