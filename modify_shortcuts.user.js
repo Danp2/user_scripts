@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Modify Zammad shortcuts
-// @version      2024-06-01
+// @version      2024-06-02
 // @license      GPL-v3
 // @description  Add and remove shortcuts to Zammad helpdesk
 // @author       DanP2
 // @match        https://help.vates.tech/*
-// @icon         hhttps://avatars.githubusercontent.com/u/1380327?s=200&v=4
+// @icon         https://avatars.githubusercontent.com/u/1380327?s=200&v=4
 // @require      https://cdn.jsdelivr.net/npm/hotkeys-js@3.13.7/dist/hotkeys.min.js
 // @grant        none
 // @run-at       document-idle
@@ -31,6 +31,9 @@
 
   console.log(`Starting ${GM_info.script.name} version ${GM_info.script.version}...`);
 
+  // enable reverse sorting of jQuery output
+  jQuery.fn.reverse = [].reverse;
+
   const disabledHotkeys = [
     {hotkey: "ctrl+shift+c", enabled: true, desc: "Update as closed"},
 
@@ -39,7 +42,7 @@
   const addedHotkeys = [
     {hotkey: "ctrl+alt+w", enabled: true, desc: "Closing active ticket", func: a => $('#navigation .tasks .is-active .js-close').trigger('click')},
     {hotkey: "ctrl+alt+z", enabled: true, desc: "Collapse all articles", func: a => collapseEntries(true)},
-    {hotkey: "ctrl+alt+x", enabled: false, desc: "Expand all articles", func: a => collapseEntries(false)},
+    {hotkey: "ctrl+alt+x", enabled: true, desc: "Expand all articles", func: a => collapseEntries(false)},
     {hotkey: "ctrl+alt+up", enabled: true, desc: "Prior ticket", func: a => prevTicket()},
     {hotkey: "ctrl+alt+down", enabled: true, desc: "Next ticket", func: a => nextTicket()},
     {hotkey: "ctrl+alt+n", enabled: true, desc: "Clear duplicate notifications", func: a => clearNotifications()},
@@ -85,7 +88,7 @@
     const activityLinkSelector = "div.activity-body a.activity-message";
 
     // Get all notification activity elements
-    let t = $(activitySelector);
+    let t = $(activitySelector).reverse();
     let origCount = t.length;
 
     // Build array of ticket numbers
@@ -102,7 +105,7 @@
         }
     }
 
-    // Remove duplicates starting with the newest entries
+    // Remove duplicates starting with the oldest entries
     t.each(function(){
       let key = $(this).find(activityLinkSelector).attr('href').match(/\d+/);
       // console.log(`> Checking ${key}`);
