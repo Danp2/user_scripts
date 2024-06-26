@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Modify Zammad shortcuts
-// @version      2024-06-02
+// @version      2024-06-25
 // @license      GPL-v3
 // @description  Add and remove shortcuts to Zammad helpdesk
 // @author       DanP2
@@ -30,9 +30,6 @@
   'use strict';
 
   console.log(`Starting ${GM_info.script.name} version ${GM_info.script.version}...`);
-
-  // enable reverse sorting of jQuery output
-  jQuery.fn.reverse = [].reverse;
 
   const disabledHotkeys = [
     {hotkey: "ctrl+shift+c", enabled: true, desc: "Update as closed"},
@@ -87,6 +84,9 @@
     const activitySelector = "div.popover div.activity-entry";
     const activityLinkSelector = "div.activity-body a.activity-message";
 
+    // enable reverse sorting of jQuery output
+    jQuery.fn.reverse = [].reverse;
+
     // Get all notification activity elements
     let t = $(activitySelector).reverse();
     let origCount = t.length;
@@ -104,6 +104,8 @@
           countByTicket[ele] = 1;
         }
     }
+
+    // console.log(countByTicket)
 
     // Remove duplicates starting with the oldest entries
     t.each(function(){
