@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2024-07-11
+// @version  2024-07-14
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
@@ -13,6 +13,7 @@
 // @grant              GM.getValue
 // @grant              GM.setValue
 // @grant              GM_registerMenuCommand
+// @grant              GM_addStyle
 // @grant              GM_getResourceText
 // @icon https://avatars.githubusercontent.com/u/1380327?s=200&v=4
 // @run-at   document-idle
@@ -39,9 +40,14 @@
 
 
     let gmc;
-    setupConfig();
+    setupScript();
 
-    function setupConfig() {
+    function setupScript() {
+        GM_addStyle(".ticket-article.extended \
+            { \
+                max-width:10000px; \
+            }");
+            
         let cfg = buildConfig();
         gmc = new GM_config(cfg);
     };
@@ -51,7 +57,7 @@
         const configId = 'zammadCfg';
  
         const iframecss = `
-            height: 510px;
+            height: 555px;
             width: 435px;
             border: 1px solid;
             border-radius: 3px;
@@ -78,9 +84,16 @@
                     type: 'checkbox',
                     default: false,
                 },
+                ticketExtended: {
+                    section: ['Tickets', ''],
+                    label: 'Use extended view?',
+                    labelPos: 'right',
+                    type: 'checkbox',
+                    default: false,
+                },
                 articleResize: {
                     section: ['Articles', ''],
-                    label: ' Control click to expand / collapse?',
+                    label: 'Control click to expand / collapse?',
                     labelPos: 'right',
                     type: 'checkbox',
                     default: true,
@@ -175,8 +188,13 @@
         $(window).on( 'hashchange', function( e ) {
             console.log( 'ticket switch detected' );
             const articleHideBlocked = gmc.get('articleHideBlocked');
+            const ticketExtended = gmc.get('ticketExtended');
+
             if (articleHideBlocked) $(blockedContentSelector).hide();
             else $(blockedContentSelector).show();
+
+            if(ticketExtended) $(ticketSelector).addClass("extended");
+            else $(ticketSelector).removeClass("extended");
         } );
 
         // hide content on initial load
