@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2024-06-25
+// @version  2024-07-11
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
@@ -40,7 +40,6 @@
 
     let gmc;
     setupConfig();
-
 
     function setupConfig() {
         let cfg = buildConfig();
@@ -134,7 +133,8 @@
         const appSelector = "div#app";
         const ticketSelector = "div.ticket-article";
         const ticketItemSelector = "div.ticket-article-item";
-        const blockedContentSelector = "div.article-meta-permanent";
+        // const blockedContentSelector = "div.article-meta-permanent";
+        const blockedContentSelector = "div.remote-content-message";
 
         GM_registerMenuCommand(`${GM_info.script.name} Settings`, () => {
             gmc.open();
@@ -239,9 +239,9 @@
         // Override default hotkeys
         hotkeys(hkDisabled, function(event, handler){
             // Prevent the default action
-            console.log(`Blocked ${hotkeys.getPressedKeyString()}`); 
-            event.preventDefault();
             event.stopImmediatePropagation();
+            event.preventDefault();
+            console.log(`Blocked ${hotkeys.getPressedKeyString()}`); 
         });
 
         // Add new hotkeys
@@ -256,7 +256,7 @@
             }  
         });
 
-        console.log(hotkeys.getAllKeyCodes());
+        // console.log(hotkeys.getAllKeyCodes());
     }
 
     const closeTicket = () => {
