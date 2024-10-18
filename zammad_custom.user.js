@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2024-07-14
+// @version  2024-10-18
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
@@ -36,6 +36,7 @@
         {saveName: "addPriorTicket", hotkey: "ctrl+alt+up", default: true, desc: "Prior ticket", func: a => prevTicket()},
         {saveName: "addNextTicket", hotkey: "ctrl+alt+down", default: true, desc: "Next ticket", func: a => nextTicket()},
         {saveName: "addClearDups", hotkey: "ctrl+alt+n", default: true, desc: "Clear duplicate notifications", func: a => clearNotifications()},
+        {saveName: "addReplyLast", hotkey: "ctrl+alt+l", default: true, desc: "Reply to last response", func: a => replyLast()},
       ];
 
 
@@ -350,4 +351,24 @@
           }
         });
     };
+
+    const replyLast = () => {
+        const customerArticleSelector = "div.ticket-article-item.customer";
+        const customerReplySelector = "a.article-action[data-type^='emailReply']";
+        const activeArticleSelector = ".active.content .article-new .articleNewEdit-body";
+
+        // Reply to last customer response
+        let custResponse = $(customerArticleSelector).last();
+        
+        if (custResponse.length) {
+            // Click "reply all" if present; otherwise click "reply"
+            $(custResponse).find("a.article-action[data-type^='emailReply']").last().get(0).click();
+
+            waitForKeyElements(activeArticleSelector, (element) => {
+                // remove text after signature block
+                $(element).find('div[data-signature=true]').siblings('div').remove();
+            });
+        }
+    };
+
 })();
