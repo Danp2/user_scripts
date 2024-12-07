@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2024-10-18
+// @version  2024-12-05
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
@@ -26,15 +26,12 @@
     console.log(`Starting ${GM_info.script.name} version ${GM_info.script.version}...`);
 
     const disabledHotkeys = [
-        {saveName: "disableUpdateClosed", hotkey: "ctrl+shift+c", default: true, desc: "Update as closed"},
+        // {saveName: "disableUpdateClosed", hotkey: "ctrl+shift+c", default: true, desc: "Update as closed"},
       ];
     
       const addedHotkeys = [
-        {saveName: "addCloseActive", hotkey: "ctrl+alt+w", default: true, desc: "Closing active ticket", func: a => closeTicket()},
         {saveName: "addCollapseAll", hotkey: "ctrl+alt+z", default: true, desc: "Collapse all articles", func: a => collapseEntries(true)},
         {saveName: "addExpandAll", hotkey: "ctrl+alt+x", default: true, desc: "Expand all articles", func: a => collapseEntries(false)},
-        {saveName: "addPriorTicket", hotkey: "ctrl+alt+up", default: true, desc: "Prior ticket", func: a => prevTicket()},
-        {saveName: "addNextTicket", hotkey: "ctrl+alt+down", default: true, desc: "Next ticket", func: a => nextTicket()},
         {saveName: "addClearDups", hotkey: "ctrl+alt+n", default: true, desc: "Clear duplicate notifications", func: a => clearNotifications()},
         {saveName: "addReplyLast", hotkey: "ctrl+alt+l", default: true, desc: "Reply to last response", func: a => replyLast()},
       ];
@@ -58,7 +55,7 @@
         const configId = 'zammadCfg';
  
         const iframecss = `
-            height: 555px;
+            height: 500px;
             width: 435px;
             border: 1px solid;
             border-radius: 3px;
@@ -278,19 +275,19 @@
         // console.log(hotkeys.getAllKeyCodes());
     }
 
-    const closeTicket = () => {
-        $('#navigation .tasks .is-active .js-close').trigger('click');
-    };
+    // const closeTicket = () => {
+    //     $('#navigation .tasks .is-active .js-close').trigger('click');
+    // };
 
-    const nextTicket = () => {
-        var t, el, n;
-        (t = $('#navigation .tasks .is-active')).get(0) && (el = t.next()).get(0) ? (el.find('div').first().trigger('click')) : (n = $('#navigation .tasks .task').first()).get(0) ? (n.find('div').first().trigger('click')) : void 0;
-    };
+    // const nextTicket = () => {
+    //     var t, el, n;
+    //     (t = $('#navigation .tasks .is-active')).get(0) && (el = t.next()).get(0) ? (el.find('div').first().trigger('click')) : (n = $('#navigation .tasks .task').first()).get(0) ? (n.find('div').first().trigger('click')) : void 0;
+    // };
     
-    const prevTicket = () => {
-        var t, el, n;
-        (t = $('#navigation .tasks .is-active')).get(0) && (n = t.prev()).get(0) ? (n.find('div').first().trigger('click')) : (el = $('#navigation .tasks .task').last()).get(0) ? (el.find('div').first().trigger('click')) : void 0;
-    };
+    // const prevTicket = () => {
+    //     var t, el, n;
+    //     (t = $('#navigation .tasks .is-active')).get(0) && (n = t.prev()).get(0) ? (n.find('div').first().trigger('click')) : (el = $('#navigation .tasks .task').last()).get(0) ? (el.find('div').first().trigger('click')) : void 0;
+    // };
     
     const collapseEntries = (action, root) => {
         if (action === undefined) {
