@@ -34,6 +34,8 @@
         {saveName: "addExpandAll", hotkey: "ctrl+alt+x", default: true, desc: "Expand all articles", func: a => collapseEntries(false)},
         {saveName: "addClearDups", hotkey: "ctrl+alt+n", default: true, desc: "Clear duplicate notifications", func: a => clearNotifications()},
         {saveName: "addReplyLast", hotkey: "ctrl+alt+l", default: true, desc: "Reply to last response", func: a => replyLast()},
+        {saveName: "addFormatCode", hotkey: "ctrl+alt+c", default: true, desc: "Format code tag", func: a => selectionToPreCode()},
+        {saveName: "addFormatBlock", hotkey: "ctrl+alt+b", default: true, desc: "Format blockquote tag", func: a => selectionToBlockquote()},
       ];
 
 
@@ -239,6 +241,9 @@
         // unbind all hotkeys
         hotkeys.unbind();
 
+        // enable custom hotkey filter
+        hotkeys.filter = customHotkeysFilter;
+
         // build string of hotkeys to disable
         let hkDisabled = '';
         let isDisabled, isEnabled;
@@ -368,4 +373,43 @@
         }
     };
 
+    const selectionToBlockquote = () => {
+        var selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          var range = selection.getRangeAt(0);
+          var newNode = document.createElement('blockquote');
+          newNode.appendChild(range.extractContents());
+          range.insertNode(newNode);
+        }
+    }
+      
+    const selectionToPreCode = () => {
+        var selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          var range = selection.getRangeAt(0);
+          
+          var preNode = document.createElement('pre');
+          var codeNode = document.createElement('code');
+
+          preNode.appendChild(codeNode);
+          codeNode.appendChild(range.extractContents());
+          range.insertNode(preNode);
+        }
+    }
+
+    const customHotkeysFilter = (event) => {
+        // hotkey is effective only when filter return true
+        const target = event.target || event.srcElement;
+        const {tagName} = target;
+        let flag = true;
+        
+        // allow hotkey on new article element
+        if (event.target.classList.contains('articleNewEdit-body')) {
+
+        } else if (target.isContentEditable || ((tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') && !target.readOnly)) {
+        // ignore: isContentEditable === 'true', <input> and <textarea> when readOnly state is false, <select>
+            flag = false;
+        }
+        return flag;
+    };
 })();
