@@ -355,16 +355,27 @@
     };
 
     const replyLast = () => {
-        const customerArticleSelector = "div.ticket-article-item.customer";
-        const customerReplySelector = "a.article-action[data-type^='emailReply']";
+        const articleSelector = "div.ticket-article-item";
+        const internalSelector = ".is-internal";
+        const agentSelector = ".agent";
+        const customerSelector = ".customer";
         const activeArticleSelector = ".active.content .article-new .articleNewEdit-body";
 
-        // Reply to last customer response
-        let custResponse = $(customerArticleSelector).last();
-        
-        if (custResponse.length) {
+        // Get non-internal articles
+        let articles = $(articleSelector).not(internalSelector);
+
+        // Find the last customer response
+        let response = $(articles).filter(customerSelector).last();
+
+        // If customer response not found, then try to locate agent response
+        if (response.length == 0) {
+            response = $(articles).filter(agentSelector).last();
+        }
+
+        // Reply to located response
+        if (response.length) {
             // Click "reply all" if present; otherwise click "reply"
-            $(custResponse).find("a.article-action[data-type^='emailReply']").last().get(0).click();
+            $(response).find("a.article-action[data-type^='emailReply']").last().get(0).click();
 
             waitForKeyElements(activeArticleSelector, (element) => {
                 // remove text after signature block
