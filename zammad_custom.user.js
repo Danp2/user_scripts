@@ -148,6 +148,8 @@
         const ticketItemSelector = "div.ticket-article-item";
         // const blockedContentSelector = "div.article-meta-permanent";
         const blockedContentSelector = "div.remote-content-message";
+        const navigationPaneSelector = "div#navigation";
+        const tabCloseSelector = "nav-tab-close-inner";
 
         GM_registerMenuCommand(`${GM_info.script.name} Settings`, () => {
             gmc.open();
@@ -162,18 +164,27 @@
                 if (closeNotification) {
                     if (!requireAlt || e.altKey) {
                         $(e.currentTarget).next(activityRemoveSelector).trigger("click");
-                        }
                     }
-                });
+                }
+            });
 
-                onElementInserted(appSelector, ticketItemSelector, function(element) {
-                    console.log("new article added");
-                    triggerHashChange();
-                });
-            }
+            onElementInserted(appSelector, ticketItemSelector, function(element) {
+                // console.log("new article added");
+                triggerHashChange();
+            });
+        });
+        
+        waitForKeyElements(navigationPaneSelector, (element) => {
+            // Track last closed tab
+            $(element).on('click', tabCloseSelector, function(e) {
+                // save href of closing ticket
+                const lastTab = $(e.currentTarget).closest('a')[0].href;
+                gmc.setValue('lastTab', lastTab);
 
-        );
-
+                console.log("tab close detected");
+            });
+        });
+        
         // Expand / collapse ticket entry
         $("body").on('click', '.textBubble', function(e) {
             const articleResize = gmc.get('articleResize');
