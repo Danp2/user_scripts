@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2024-10-18
+// @version  2024-12-05
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
@@ -26,17 +26,16 @@
     console.log(`Starting ${GM_info.script.name} version ${GM_info.script.version}...`);
 
     const disabledHotkeys = [
-        {saveName: "disableUpdateClosed", hotkey: "ctrl+shift+c", default: true, desc: "Update as closed"},
+        // {saveName: "disableUpdateClosed", hotkey: "ctrl+shift+c", default: true, desc: "Update as closed"},
       ];
     
       const addedHotkeys = [
-        {saveName: "addCloseActive", hotkey: "ctrl+alt+w", default: true, desc: "Closing active ticket", func: a => closeTicket()},
         {saveName: "addCollapseAll", hotkey: "ctrl+alt+z", default: true, desc: "Collapse all articles", func: a => collapseEntries(true)},
         {saveName: "addExpandAll", hotkey: "ctrl+alt+x", default: true, desc: "Expand all articles", func: a => collapseEntries(false)},
-        {saveName: "addPriorTicket", hotkey: "ctrl+alt+up", default: true, desc: "Prior ticket", func: a => prevTicket()},
-        {saveName: "addNextTicket", hotkey: "ctrl+alt+down", default: true, desc: "Next ticket", func: a => nextTicket()},
         {saveName: "addClearDups", hotkey: "ctrl+alt+n", default: true, desc: "Clear duplicate notifications", func: a => clearNotifications()},
         {saveName: "addReplyLast", hotkey: "ctrl+alt+l", default: true, desc: "Reply to last response", func: a => replyLast()},
+        {saveName: "addFormatCode", hotkey: "ctrl+alt+c", default: true, desc: "Format code tag", func: a => selectionToPreCode()},
+        {saveName: "addFormatBlock", hotkey: "ctrl+alt+b", default: true, desc: "Format blockquote tag", func: a => selectionToBlockquote()},
       ];
 
 
@@ -58,7 +57,7 @@
         const configId = 'zammadCfg';
  
         const iframecss = `
-            height: 555px;
+            height: 500px;
             width: 435px;
             border: 1px solid;
             border-radius: 3px;
@@ -149,6 +148,8 @@
         const ticketItemSelector = "div.ticket-article-item";
         // const blockedContentSelector = "div.article-meta-permanent";
         const blockedContentSelector = "div.remote-content-message";
+        const navigationPaneSelector = "div#navigation";
+        const tabCloseSelector = "nav-tab-close-inner";
 
         GM_registerMenuCommand(`${GM_info.script.name} Settings`, () => {
             gmc.open();
@@ -163,18 +164,27 @@
                 if (closeNotification) {
                     if (!requireAlt || e.altKey) {
                         $(e.currentTarget).next(activityRemoveSelector).trigger("click");
-                        }
                     }
-                });
+                }
+            });
 
-                onElementInserted(appSelector, ticketItemSelector, function(element) {
-                    console.log("new article added");
-                    triggerHashChange();
-                });
-            }
+            onElementInserted(appSelector, ticketItemSelector, function(element) {
+                // console.log("new article added");
+                triggerHashChange();
+            });
+        });
+        
+        waitForKeyElements(navigationPaneSelector, (element) => {
+            // Track last closed tab
+            $(element).on('click', tabCloseSelector, function(e) {
+                // save href of closing ticket
+                const lastTab = $(e.currentTarget).closest('a')[0].href;
+                gmc.setValue('lastTab', lastTab);
 
-        );
-
+                console.log("tab close detected");
+            });
+        });
+        
         // Expand / collapse ticket entry
         $("body").on('click', '.textBubble', function(e) {
             const articleResize = gmc.get('articleResize');
@@ -242,6 +252,9 @@
         // unbind all hotkeys
         hotkeys.unbind();
 
+        // enable custom hotkey filter
+        hotkeys.filter = customHotkeysFilter;
+
         // build string of hotkeys to disable
         let hkDisabled = '';
         let isDisabled, isEnabled;
@@ -278,19 +291,19 @@
         // console.log(hotkeys.getAllKeyCodes());
     }
 
-    const closeTicket = () => {
-        $('#navigation .tasks .is-active .js-close').trigger('click');
-    };
+    // const closeTicket = () => {
+    //     $('#navigation .tasks .is-active .js-close').trigger('click');
+    // };
 
-    const nextTicket = () => {
-        var t, el, n;
-        (t = $('#navigation .tasks .is-active')).get(0) && (el = t.next()).get(0) ? (el.find('div').first().trigger('click')) : (n = $('#navigation .tasks .task').first()).get(0) ? (n.find('div').first().trigger('click')) : void 0;
-    };
+    // const nextTicket = () => {
+    //     var t, el, n;
+    //     (t = $('#navigation .tasks .is-active')).get(0) && (el = t.next()).get(0) ? (el.find('div').first().trigger('click')) : (n = $('#navigation .tasks .task').first()).get(0) ? (n.find('div').first().trigger('click')) : void 0;
+    // };
     
-    const prevTicket = () => {
-        var t, el, n;
-        (t = $('#navigation .tasks .is-active')).get(0) && (n = t.prev()).get(0) ? (n.find('div').first().trigger('click')) : (el = $('#navigation .tasks .task').last()).get(0) ? (el.find('div').first().trigger('click')) : void 0;
-    };
+    // const prevTicket = () => {
+    //     var t, el, n;
+    //     (t = $('#navigation .tasks .is-active')).get(0) && (n = t.prev()).get(0) ? (n.find('div').first().trigger('click')) : (el = $('#navigation .tasks .task').last()).get(0) ? (el.find('div').first().trigger('click')) : void 0;
+    // };
     
     const collapseEntries = (action, root) => {
         if (action === undefined) {
@@ -353,16 +366,27 @@
     };
 
     const replyLast = () => {
-        const customerArticleSelector = "div.ticket-article-item.customer";
-        const customerReplySelector = "a.article-action[data-type^='emailReply']";
+        const articleSelector = "div.ticket-article-item";
+        const internalSelector = ".is-internal";
+        const agentSelector = ".agent";
+        const customerSelector = ".customer";
         const activeArticleSelector = ".active.content .article-new .articleNewEdit-body";
 
-        // Reply to last customer response
-        let custResponse = $(customerArticleSelector).last();
-        
-        if (custResponse.length) {
+        // Get non-internal articles
+        let articles = $(articleSelector).not(internalSelector);
+
+        // Find the last customer response
+        let response = $(articles).filter(customerSelector).last();
+
+        // If customer response not found, then try to locate agent response
+        if (response.length == 0) {
+            response = $(articles).filter(agentSelector).last();
+        }
+
+        // Reply to located response
+        if (response.length) {
             // Click "reply all" if present; otherwise click "reply"
-            $(custResponse).find("a.article-action[data-type^='emailReply']").last().get(0).click();
+            $(response).find("a.article-action[data-type^='emailReply']").last().get(0).click();
 
             waitForKeyElements(activeArticleSelector, (element) => {
                 // remove text after signature block
@@ -371,4 +395,43 @@
         }
     };
 
+    const selectionToBlockquote = () => {
+        var selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          var range = selection.getRangeAt(0);
+          var newNode = document.createElement('blockquote');
+          newNode.appendChild(range.extractContents());
+          range.insertNode(newNode);
+        }
+    }
+      
+    const selectionToPreCode = () => {
+        var selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          var range = selection.getRangeAt(0);
+          
+          var preNode = document.createElement('pre');
+          var codeNode = document.createElement('code');
+
+          preNode.appendChild(codeNode);
+          codeNode.appendChild(range.extractContents());
+          range.insertNode(preNode);
+        }
+    }
+
+    const customHotkeysFilter = (event) => {
+        // hotkey is effective only when filter return true
+        const target = event.target || event.srcElement;
+        const {tagName} = target;
+        let flag = true;
+        
+        // allow hotkey on new article element
+        if (event.target.classList.contains('articleNewEdit-body')) {
+
+        } else if (target.isContentEditable || ((tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') && !target.readOnly)) {
+        // ignore: isContentEditable === 'true', <input> and <textarea> when readOnly state is false, <select>
+            flag = false;
+        }
+        return flag;
+    };
 })();
