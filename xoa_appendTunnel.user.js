@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Append Tunnel Number To XOA
 // @namespace   Violentmonkey Scripts
-// @include     /(?<=^https:\/\/)\d{5}\.tunnel\.gpn\.vates\.fr/
+// @include     /(?<=^http[s]?:\/\/)\d{5}\.tunnel\.gpn\.vates\.fr/
 // @grant       none
 // @version     2024-09-16
 // @license     GPL-v3
@@ -12,29 +12,28 @@
 // ==/UserScript==
 
 function appendTunnelToTitle() {
-    var regex = /(?<=^https:\/\/)\d{5}/;
-    var tunnel = regex.exec(document.URL);
-    var prepend = false;
-  
-    if (prepend) {
-      if (!document.title.startsWith(tunnel[0])) {
-        document.title = tunnel[0].concat(' - ', document.title);
-      }
-    }
-    else
-    {
-      if (!document.title.endsWith(tunnel[0])) {
-        document.title = document.title.concat(' - ', tunnel[0]);
-      }
+  var regex = /(?<=^http[s]?:\/\/)\d{5}/;
+  var tunnel = regex.exec(document.URL);
+  var prepend = false;
+
+  if (prepend) {
+    if (!document.title.startsWith(tunnel[0])) {
+      document.title = tunnel[0].concat(' - ', document.title);
     }
   }
-  
-  window.onload = function(){
-      appendTunnelToTitle();
-  };
-  
-  new MutationObserver(function(mutations) {
-      console.log('Mutation observed');
-      setInterval(appendTunnelToTitle, 1000);
-  }).observe(document.querySelector('title'), { subtree: true, characterData: true, childList: true });
-  
+  else
+  {
+    if (!document.title.endsWith(tunnel[0])) {
+      document.title = document.title.concat(' - ', tunnel[0]);
+    }
+  }
+}
+
+window.onload = function(){
+	appendTunnelToTitle();
+};
+
+new MutationObserver(function(mutations) {
+	console.log('Mutation observed');
+	setInterval(appendTunnelToTitle, 1000);
+}).observe(document.querySelector('title'), { subtree: true, characterData: true, childList: true });
