@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2024-12-05
+// @version  2025-03-11
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
@@ -38,8 +38,7 @@
         {saveName: "addFormatBlock", hotkey: "ctrl+alt+b", default: true, desc: "Format blockquote tag", func: a => selectionToBlockquote()},
       ];
 
-
-    let gmc;
+    let gmc, channel;
     setupScript();
 
     function setupScript() {
@@ -57,7 +56,7 @@
         const configId = 'zammadCfg';
  
         const iframecss = `
-            height: 500px;
+            height: 535px;
             width: 435px;
             border: 1px solid;
             border-radius: 3px;
@@ -80,6 +79,13 @@
                 },
                 requireAlt: {
                     label: 'Require Alt key?',
+                    labelPos: 'right',
+                    type: 'checkbox',
+                    default: false,
+                },
+                existingTab:{
+                    section: ['External Links', ''],
+                    label: 'Open in existing tab?',
                     labelPos: 'right',
                     type: 'checkbox',
                     default: false,
@@ -150,6 +156,8 @@
         const blockedContentSelector = "div.remote-content-message";
         const navigationPaneSelector = "div#navigation";
         const tabCloseSelector = "nav-tab-close-inner";
+
+        checkExistingInstance();
 
         GM_registerMenuCommand(`${GM_info.script.name} Settings`, () => {
             gmc.open();
@@ -289,6 +297,50 @@
         });
 
         // console.log(hotkeys.getAllKeyCodes());
+    }
+
+    // https://community.zammad.org/t/one-tab-only-addon/10891
+    // https://github.com/Stubenhocker1399/zammad-addon-one-tab-only/blob/master/one-tab-only.js
+    function checkExistingInstance() {
+        
+        try {
+            var location = window.location.hash;
+            if (!location) {
+                location = (window.location.origin + '/' === window.location.href) ? '/#dashboard' : false;
+            }
+            if (location) {
+                var channel = new BroadcastChannel('zammad-tab');
+                
+                channel.postMessage({type: 'another-tab', content: location});
+                
+                channel.addEventListener('message', function(msg) {
+                    const existingTab = gmc.get('existingTab');
+                    console.log('message received', existingTab);
+                    if (existingTab) {
+                        if (msg.data.type === 'another-tab') {
+                            // Message received from other Zammad tab, reply to it and open its location
+                            channel.postMessage({type: 'i-got-it'});
+                            window.focus();
+        
+                            // if (document.hidden) {
+                            //     App.Event.trigger('notifyDesktop', {
+                            //         title: 'Click here to focus opened Zammad link',
+                            //         timeout: 10000,
+                            //         onclick: function() { window.focus(); },
+                            //     });
+                            // }
+        
+                            window.location = window.origin + msg.data.content;
+                        } else if (msg.data.type === 'i-got-it') {
+                            window.close();
+                        }
+                    }
+                });
+            }
+        }
+        catch (e) {
+            console.error('checkExistingInstance error:', e);
+        }
     }
 
     // const closeTicket = () => {
