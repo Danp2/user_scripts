@@ -440,10 +440,10 @@
             // Click "reply all" if present; otherwise click "reply"
             $(response).find("a.article-action[data-type^='emailReply']").last().get(0).click();
 
-            waitForKeyElements(activeArticleSelector, (element) => {
-                // remove text after signature block
-                $(element).find('div[data-signature=true]').siblings('div').remove();
-            });
+            // waitForKeyElements(activeArticleSelector, (element) => {
+            //     // remove text after signature block
+            //     $(element).find('div[data-signature=true]').siblings('div').remove();
+            // });
         }
     };
 
