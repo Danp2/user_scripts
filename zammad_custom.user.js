@@ -15,15 +15,17 @@
 // @grant              GM_registerMenuCommand
 // @grant              GM_addStyle
 // @grant              GM_getResourceText
-// @icon https://avatars.githubusercontent.com/u/1380327?s=200&v=4
-// @run-at   document-idle
-// @description Customize Zammad
+// @icon               https://avatars.githubusercontent.com/u/1380327?s=200&v=4
+// @run-at             document-start
+// @description        Customize Zammad
 // ==/UserScript==
 
 (function() {
     'use strict';
 
     console.log(`Starting ${GM_info.script.name} version ${GM_info.script.version}...`);
+
+    checkExistingInstance();
 
     const disabledHotkeys = [
         // {saveName: "disableUpdateClosed", hotkey: "ctrl+shift+c", default: true, desc: "Update as closed"},
@@ -156,8 +158,6 @@
         const blockedContentSelector = "div.remote-content-message";
         const navigationPaneSelector = "div#navigation";
         const tabCloseSelector = "nav-tab-close-inner";
-
-        checkExistingInstance();
 
         GM_registerMenuCommand(`${GM_info.script.name} Settings`, () => {
             gmc.open();
