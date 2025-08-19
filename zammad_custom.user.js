@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2025-03-11
+// @version  2025-08-19
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
