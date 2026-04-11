@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2025-08-19
+// @version  2026-04-11
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
@@ -20,6 +20,8 @@
 // @description        Customize Zammad
 // ==/UserScript==
 
+/* global GM_info, GM_config, GM_registerMenuCommand, GM_addStyle, jQuery, $, hotkeys, waitForKeyElements */
+
 (function() {
     'use strict';
 
@@ -30,17 +32,17 @@
     const disabledHotkeys = [
         // {saveName: "disableUpdateClosed", hotkey: "ctrl+shift+c", default: true, desc: "Update as closed"},
       ];
-    
+
       const addedHotkeys = [
-        {saveName: "addCollapseAll", hotkey: "ctrl+alt+z", default: true, desc: "Collapse all articles", func: a => collapseEntries(true)},
-        {saveName: "addExpandAll", hotkey: "ctrl+alt+x", default: true, desc: "Expand all articles", func: a => collapseEntries(false)},
-        {saveName: "addClearDups", hotkey: "ctrl+alt+n", default: true, desc: "Clear duplicate notifications", func: a => clearNotifications()},
-        {saveName: "addReplyLast", hotkey: "ctrl+alt+l", default: true, desc: "Reply to last response", func: a => replyLast()},
-        {saveName: "addFormatCode", hotkey: "ctrl+alt+c", default: true, desc: "Format code tag", func: a => selectionToPreCode()},
-        {saveName: "addFormatBlock", hotkey: "ctrl+alt+b", default: true, desc: "Format blockquote tag", func: a => selectionToBlockquote()},
+        {saveName: "addCollapseAll", hotkey: "ctrl+alt+z", default: true, desc: "Collapse all articles", func: () => collapseEntries(true)},
+        {saveName: "addExpandAll", hotkey: "ctrl+alt+x", default: true, desc: "Expand all articles", func: () => collapseEntries(false)},
+        {saveName: "addClearDups", hotkey: "ctrl+alt+n", default: true, desc: "Clear duplicate notifications", func: () => clearNotifications()},
+        {saveName: "addReplyLast", hotkey: "ctrl+alt+l", default: true, desc: "Reply to last response", func: () => replyLast()},
+        {saveName: "addFormatCode", hotkey: "ctrl+alt+c", default: true, desc: "Format code tag", func: () => selectionToPreCode()},
+        {saveName: "addFormatBlock", hotkey: "ctrl+alt+b", default: true, desc: "Format blockquote tag", func: () => selectionToBlockquote()},
       ];
 
-    let gmc, channel;
+    let gmc;
     setupScript();
 
     function setupScript() {
@@ -48,7 +50,7 @@
             { \
                 max-width:10000px; \
             }");
-            
+
         let cfg = buildConfig();
         gmc = new GM_config(cfg);
     };
@@ -56,7 +58,7 @@
     function buildConfig() {
 
         const configId = 'zammadCfg';
- 
+
         const iframecss = `
             height: 535px;
             width: 435px;
@@ -145,7 +147,7 @@
 
         return cfg;
     }
-    
+
     // initialization complete
     function onInit() {
         const popoverSelector = "div.popover--notifications";
@@ -159,7 +161,7 @@
         const navigationPaneSelector = "div#navigation";
         const tabCloseSelector = "nav-tab-close-inner";
 
-        GM_registerMenuCommand(`${GM_info.script.name} Settings`, () => {
+        GM_registerMenuCommand('Settings', () => {
             gmc.open();
         });
 
@@ -176,12 +178,12 @@
                 }
             });
 
-            onElementInserted(appSelector, ticketItemSelector, function(element) {
+            onElementInserted(appSelector, ticketItemSelector, function() {
                 // console.log("new article added");
                 triggerHashChange();
             });
         });
-        
+
         waitForKeyElements(navigationPaneSelector, (element) => {
             // Track last closed tab
             $(element).on('click', tabCloseSelector, function(e) {
@@ -192,7 +194,7 @@
                 console.log("tab close detected");
             });
         });
-        
+
         // Expand / collapse ticket entry
         $("body").on('click', '.textBubble', function(e) {
             const articleResize = gmc.get('articleResize');
@@ -204,7 +206,7 @@
         });
 
         // hide blocked content notices
-        $(window).on( 'hashchange', function( e ) {
+        $(window).on( 'hashchange', function() {
             console.log( 'ticket switch detected' );
             const articleHideBlocked = gmc.get('articleHideBlocked');
             const ticketExtended = gmc.get('ticketExtended');
@@ -220,10 +222,10 @@
         // triggerHashChange()
 
         setupHotkeys();
-        
+
         console.log(`Successfully started ${GM_info.script.name} version ${GM_info.script.version}!`);
     }
-    
+
     function onSave() {
         gmc.close();
         setupHotkeys();
@@ -277,11 +279,11 @@
         });
 
         // Override default hotkeys
-        hotkeys(hkDisabled, function(event, handler){
+        hotkeys(hkDisabled, function(event) {
             // Prevent the default action
             event.stopImmediatePropagation();
             event.preventDefault();
-            console.log(`Blocked ${hotkeys.getPressedKeyString()}`); 
+            console.log(`Blocked ${hotkeys.getPressedKeyString()}`);
         });
 
         // Add new hotkeys
@@ -290,10 +292,10 @@
 
             if (isEnabled) {
                 console.log(`> Adding "${h.desc}" hotkey (${h.hotkey})`);
-                hotkeys(h.hotkey, function(e){
+                hotkeys(h.hotkey, function(){
                   ("function" === typeof h.func) && h.func(h);
                 });
-            }  
+            }
         });
 
         // console.log(hotkeys.getAllKeyCodes());
@@ -302,7 +304,7 @@
     // https://community.zammad.org/t/one-tab-only-addon/10891
     // https://github.com/Stubenhocker1399/zammad-addon-one-tab-only/blob/master/one-tab-only.js
     function checkExistingInstance() {
-        
+
         try {
             var location = window.location.hash;
             if (!location) {
@@ -310,9 +312,9 @@
             }
             if (location) {
                 var channel = new BroadcastChannel('zammad-tab');
-                
+
                 channel.postMessage({type: 'another-tab', content: location});
-                
+
                 channel.addEventListener('message', function(msg) {
                     const existingTab = gmc.get('existingTab');
                     console.log('message received', existingTab);
@@ -321,7 +323,7 @@
                             // Message received from other Zammad tab, reply to it and open its location
                             channel.postMessage({type: 'i-got-it'});
                             window.focus();
-        
+
                             // if (document.hidden) {
                             //     App.Event.trigger('notifyDesktop', {
                             //         title: 'Click here to focus opened Zammad link',
@@ -329,7 +331,7 @@
                             //         onclick: function() { window.focus(); },
                             //     });
                             // }
-        
+
                             window.location = window.origin + msg.data.content;
                         } else if (msg.data.type === 'i-got-it') {
                             window.close();
@@ -351,50 +353,50 @@
     //     var t, el, n;
     //     (t = $('#navigation .tasks .is-active')).get(0) && (el = t.next()).get(0) ? (el.find('div').first().trigger('click')) : (n = $('#navigation .tasks .task').first()).get(0) ? (n.find('div').first().trigger('click')) : void 0;
     // };
-    
+
     // const prevTicket = () => {
     //     var t, el, n;
     //     (t = $('#navigation .tasks .is-active')).get(0) && (n = t.prev()).get(0) ? (n.find('div').first().trigger('click')) : (el = $('#navigation .tasks .task').last()).get(0) ? (el.find('div').first().trigger('click')) : void 0;
     // };
-    
+
     const collapseEntries = (action, root) => {
         if (action === undefined) {
           action = false;
         }
-    
+
         if (root === undefined) {
             root = document;
         }
-    
+
         const articleSelector = ".ticket-article-item";
         const expandedSelector = ".textBubble-overflowContainer.is-open:not(.hide)";
         const collapsedSelector = ".textBubble-overflowContainer:not(.is-open):not(.hide)";
         const toggleFoldClass = "js-toggleFold";
-    
+
         let activeSelector = (action) ? expandedSelector : collapsedSelector;
-        const elements = root.querySelectorAll(articleSelector);
+        // const elements = root.querySelectorAll(articleSelector);
         root.querySelectorAll(articleSelector)
-          .forEach((elt, i) => {
+          .forEach((elt) => {
             if (elt.querySelector(activeSelector)) {
               elt.getElementsByClassName(toggleFoldClass)[0].click();
             }
         });
     };
-    
+
     const clearNotifications = () => {
         const activitySelector = "div.popover div.activity-entry";
         const activityLinkSelector = "div.activity-body a.activity-message";
-    
+
         // enable reverse sorting of jQuery output
         jQuery.fn.reverse = [].reverse;
-    
+
         // Get all notification activity elements
         let t = $(activitySelector).reverse();
-        let origCount = t.length;
-    
+        // let origCount = t.length;
+
         // Build array of ticket numbers
         let tickets = t.find(activityLinkSelector).map(function(i,el) { return $(el).attr('href').match(/\d+/); }).get();
-    
+
         // Count duplicates
         const countByTicket = {};
         for (let i = 0; i < tickets.length; i++) {
@@ -405,7 +407,7 @@
               countByTicket[ele] = 1;
             }
         }
-    
+
         // Remove duplicates starting with the oldest entries
         t.each(function(){
           let key = $(this).find(activityLinkSelector).attr('href').match(/\d+/);
@@ -422,7 +424,7 @@
         const internalSelector = ".is-internal";
         const agentSelector = ".agent";
         const customerSelector = ".customer";
-        const activeArticleSelector = ".active.content .article-new .articleNewEdit-body";
+        // const activeArticleSelector = ".active.content .article-new .articleNewEdit-body";
 
         // Get non-internal articles
         let articles = $(articleSelector).not(internalSelector);
@@ -456,12 +458,12 @@
           range.insertNode(newNode);
         }
     }
-      
+
     const selectionToPreCode = () => {
         var selection = window.getSelection();
         if (selection.rangeCount > 0) {
           var range = selection.getRangeAt(0);
-          
+
           var preNode = document.createElement('pre');
           var codeNode = document.createElement('code');
 
@@ -476,9 +478,10 @@
         const target = event.target || event.srcElement;
         const {tagName} = target;
         let flag = true;
-        
+
         // allow hotkey on new article element
         if (event.target.classList.contains('articleNewEdit-body')) {
+            // allow hotkeys when focus is on new article textarea
 
         } else if (target.isContentEditable || ((tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') && !target.readOnly)) {
         // ignore: isContentEditable === 'true', <input> and <textarea> when readOnly state is false, <select>
