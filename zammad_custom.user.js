@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name     Zammad customizations
 // @match    https://help.vates.tech/*
-// @version  2026-04-11
+// @version  2026-11-19
 // @license      GPL-v3
 // @author       DanP2
 // @require            https://code.jquery.com/jquery-3.6.0.min.js
@@ -308,7 +308,14 @@
         try {
             var location = window.location.hash;
             if (!location) {
-                location = (window.location.origin + '/' === window.location.href) ? '/#dashboard' : false;
+                const mobileTicket = window.location.pathname.match(/^\/mobile\/tickets\/(\d+)/);
+                if (mobileTicket) {
+                    location = `/#ticket/zoom/${mobileTicket[1]}`;
+                } else if (window.location.origin + '/' === window.location.href) {
+                    location = '/#dashboard';
+                } else {
+                    location = false;
+                }
             }
             if (location) {
                 var channel = new BroadcastChannel('zammad-tab');
